@@ -1,0 +1,20 @@
+Package: ultROC
+Type: Package
+Title: Dignostic accuracy of biomarker under umbrella or tree ordering 
+Version: 0.1.0
+Authors@R: 
+    person(given = "Duc-Khanh",
+           family = "To",
+           role = c("aut", "cre"),
+           email = "tdkhanh@hcmus.edu.vn",
+           comment = c(ORCID = "0000-0002-4641-0764"))
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+Depends: R(>= 3.3.0), stats, utils, graphics
+LazyLoad: yes
+ByteCompile: yes
+RoxygenNote: 7.2.3
+NeedsCompilation: yes
