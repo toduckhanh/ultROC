@@ -93,7 +93,7 @@ PODXL_3 <- (-1) * data_genes$PODXL[data_genes$Group == "ADC"]
 PODXL_4 <- (-1) * data_genes$PODXL[data_genes$Group == "LCC"]
 PODXL_ls <- list(PODXL_1, PODXL_2, PODXL_3, PODXL_4)
 
-### ---- Empirical estimation for indexes ----
+### ---- Empirical estimation for LTAUC/UTAUC ----
 ## ---- HPGD_1 ----
 LTAUC_HPGD_1 <- LTAUC_emp(HPGD_1_ls)
 UTAUC_HPGD_1 <- UTAUC_emp(HPGD_1_ls)
@@ -218,271 +218,128 @@ round(
                     ci_UTAUC_PODXL[[2]])), 4
 )
 
-### ---- LTROC and UTROC curves ----
-p1 <- seq(0, 1, by = 0.001)
-LTROC_emp_HPGD_1 <- LTROC_emp(p1, Xlist = HPGD_1_ls)
-UTROC_emp_HPGD_1 <- UTROC_emp(p1, Xlist = HPGD_1_ls)
-
-LTROC_emp_HPGD_1[p1 == 0] <- 0
-LTROC_emp_HPGD_1[p1 == 1] <- 1
-UTROC_emp_HPGD_1[p1 == 0] <- 0
-UTROC_emp_HPGD_1[p1 == 1] <- 1
+### ---- LTROC and UTROC curves: HPGD_1 ----
+LTROC_emp_HPGD_1 <- LTROC_emp(Xlist = HPGD_1_ls)
+UTROC_emp_HPGD_1 <- UTROC_emp(Xlist = HPGD_1_ls)
 
 t1_HPGD_1 <- -1.1
 
-Sp_emp_HPGD_1 <- mean(HPGD_1_ls[[1]] <= t1_HPGD_1)
-all_Se_emp_HPGD_1 <- sapply(HPGD_1_ls[-1], function(y) {
-  mean(y > t1_HPGD_1)
-})
-
-LSe_emp_HPGD_1 <- min(all_Se_emp_HPGD_1)
-id_min_Se_HPGD_1 <- which.min(all_Se_emp_HPGD_1)
-
-x1_Sp_HPGD_1 <- seq(0.01, 0.3, length.out = 300)
-y1_Se_HPGD_1 <- seq(0.5, 0.95, length.out = 300)
-
-ll_Sp_LSe_estHPGD_1 <- sapply(x1_Sp_HPGD_1, function(x){
-  sapply(y1_Se_HPGD_1, function(y){
-    ll_emp_2s(n = n, p0 = c(x, y),
-              p_est = c(1 - Sp_emp_HPGD_1, LSe_emp_HPGD_1),
-              id_min_max = id_min_Se_HPGD_1)
-  })
-})
+ll_Sp_LSe_est_HPGD_1 <- EL_cr_LTROC(cpt = t1_HPGD_1, Xlist = HPGD_1_ls,
+                                    xlim = c(0.01, 0.3), ylim = c(0.5, 0.95))
 
 t2_HPGD_1 <- 0.8
 
-Sp_emp_HPGD_1_2 <- mean(HPGD_1_ls[[1]] <= t2_HPGD_1)
-all_Se_emp_HPGD_1_2 <- sapply(HPGD_1_ls[-1], function(y){
-  mean(y > t2_HPGD_1)
-})
-USe_emp_HPGD_1 <- max(all_Se_emp_HPGD_1_2)
-id_min_Se_HPGD_1_2 <- which.max(all_Se_emp_HPGD_1_2)
+ll_Sp_USe_est_HPGD_1 <- EL_cr_UTROC(cpt = t2_HPGD_1, Xlist = HPGD_1_ls,
+                                    xlim = c(0, 0.3), ylim = c(0.6, 1))
 
-x2_Sp_HPGD_1 <- seq(0, 0.3, length.out = 300)
-y2_Se_HPGD_1 <- seq(0.6, 1, length.out = 300)
-
-ll_Sp_USe_estHPGD_1 <- sapply(x2_Sp_HPGD_1, function(x){
-  sapply(y2_Se_HPGD_1, function(y){
-    ll_emp_2s(n = n, p0 = c(x, y),
-              p_est = c(1 - Sp_emp_HPGD_1_2, USe_emp_HPGD_1),
-              id_min_max = id_min_Se_HPGD_1_2)
-  })
-})
-
-plot(x = p1, y = LTROC_emp_HPGD_1, type = "l", col = "forestgreen",
-     xlim = c(0, 1), ylim = c(0, 1), # xaxs = "i", yaxs = "i",
+plot(x = LTROC_emp_HPGD_1[, 1], y = LTROC_emp_HPGD_1[, 2], type = "l",
+     col = "forestgreen", xlim = c(0, 1), ylim = c(0, 1),
      xlab = "1 - Specificity", ylab = "LSe / USe",
-     firstpanel = grid()) #, axes = FALSE)
-contour(x1_Sp_HPGD_1, y1_Se_HPGD_1, t(ll_Sp_LSe_estHPGD_1),
-        levels = c(4.60517, 5.99, 9.21034), col = "forestgreen",
+     firstpanel = grid())
+contour(ll_Sp_LSe_est_HPGD_1$x_Sp, ll_Sp_LSe_est_HPGD_1$y_Se,
+        ll_Sp_LSe_est_HPGD_1$ll_Sp_LSe,
+        levels = qchisq(c(0.9, 0.95, 0.99), df = 2), col = "forestgreen",
         labels = c("0.90", "0.95", "0.99"), add = TRUE)
-points(x = 1 - Sp_emp_HPGD_1, y = LSe_emp_HPGD_1, pch = 16,
-       col = "forestgreen")
+points(x = 1 - ll_Sp_LSe_est_HPGD_1$Sp, y = ll_Sp_LSe_est_HPGD_1$LSe,
+       pch = 16, col = "forestgreen")
 
-lines(x = p1, y = UTROC_emp_HPGD_1, col = "blue")
-contour(x2_Sp_HPGD_1, y2_Se_HPGD_1, t(ll_Sp_USe_estHPGD_1),
-        levels = c(4.60517, 5.99, 9.21034), col = "blue",
+lines(x = UTROC_emp_HPGD_1[, 1], y = UTROC_emp_HPGD_1[, 2], col = "blue")
+contour(ll_Sp_USe_est_HPGD_1$x_Sp, ll_Sp_USe_est_HPGD_1$y_Se,
+        ll_Sp_USe_est_HPGD_1$ll_Sp_USe,
+        levels = qchisq(c(0.9, 0.95, 0.99), df = 2), col = "blue",
         labels = c("0.90", "0.95", "0.99"), add = TRUE)
-points(x = 1 - Sp_emp_HPGD_1_2, y = USe_emp_HPGD_1, pch = 16,
+points(x = 1 - ll_Sp_USe_est_HPGD_1$Sp, y = ll_Sp_USe_est_HPGD_1$USe, pch = 16,
        col = "blue")
 
-### ---- LTROC and UTROC curves ----
-p1 <- seq(0, 1, by = 0.001)
-LTROC_emp_HPGD_2 <- LTROC_emp(p1, Xlist = HPGD_2_ls)
-UTROC_emp_HPGD_2 <- UTROC_emp(p1, Xlist = HPGD_2_ls)
-
-LTROC_emp_HPGD_2[p1 == 0] <- 0
-LTROC_emp_HPGD_2[p1 == 1] <- 1
-UTROC_emp_HPGD_2[p1 == 0] <- 0
-UTROC_emp_HPGD_2[p1 == 1] <- 1
+### ---- LTROC and UTROC curves: HPGD_2 ----
+LTROC_emp_HPGD_2 <- LTROC_emp(Xlist = HPGD_2_ls)
+UTROC_emp_HPGD_2 <- UTROC_emp(Xlist = HPGD_2_ls)
 
 t1_HPGD_2 <- -1.1
-
-Sp_emp_HPGD_2 <- mean(HPGD_2_ls[[1]] <= t1_HPGD_2)
-all_Se_emp_HPGD_2 <- sapply(HPGD_2_ls[-1], function(y){
-  mean(y > t1_HPGD_2)
-})
-LSe_emp_HPGD_2 <- min(all_Se_emp_HPGD_2)
-id_min_Se_HPGD_2 <- which.min(all_Se_emp_HPGD_2)
-
-x1_Sp_HPGD_2 <- seq(0.01, 0.3, length.out = 300)
-y1_Se_HPGD_2 <- seq(0.5, 0.95, length.out = 300)
-
-ll_Sp_LSe_estHPGD_2 <- sapply(x1_Sp_HPGD_2, function(x){
-  sapply(y1_Se_HPGD_2, function(y){
-    ll_emp_2s(n = n, p0 = c(x, y),
-              p_est = c(1 - Sp_emp_HPGD_2, LSe_emp_HPGD_2),
-              id_min_max = id_min_Se_HPGD_2)
-  })
-})
+ll_Sp_LSe_est_HPGD_2 <- EL_cr_LTROC(cpt = t1_HPGD_2, Xlist = HPGD_2_ls,
+                                    xlim = c(0.01, 0.3), ylim = c(0.5, 0.95))
 
 t2_HPGD_2 <- 0.8
+ll_Sp_USe_est_HPGD_2 <- EL_cr_UTROC(cpt = t2_HPGD_2, Xlist = HPGD_2_ls,
+                                    xlim = c(0, 0.3), ylim = c(0.6, 1))
 
-Sp_emp_HPGD_2_2 <- mean(HPGD_2_ls[[1]] <= t2_HPGD_2)
-all_Se_emp_HPGD_2_2 <- sapply(HPGD_2_ls[-1], function(y){
-  mean(y > t2_HPGD_2)
-})
-USe_emp_HPGD_2 <- max(all_Se_emp_HPGD_2_2)
-id_min_Se_HPGD_2_2 <- which.max(all_Se_emp_HPGD_2_2)
-
-x2_Sp_HPGD_2 <- seq(0, 0.3, length.out = 300)
-y2_Se_HPGD_2 <- seq(0.6, 1, length.out = 300)
-
-ll_Sp_USe_estHPGD_2 <- sapply(x2_Sp_HPGD_2, function(x){
-  sapply(y2_Se_HPGD_2, function(y){
-    ll_emp_2s(n = n, p0 = c(x, y),
-              p_est = c(1 - Sp_emp_HPGD_2_2, USe_emp_HPGD_2),
-              id_min_max = id_min_Se_HPGD_2_2)
-  })
-})
-
-plot(x = p1, y = LTROC_emp_HPGD_2, type = "l", col = "forestgreen",
-     xlim = c(0, 1), ylim = c(0, 1), # xaxs = "i", yaxs = "i",
+plot(x = LTROC_emp_HPGD_2[, 1], y = LTROC_emp_HPGD_2[, 2], type = "l",
+     col = "forestgreen", xlim = c(0, 1), ylim = c(0, 1),
      xlab = "1 - Specificity", ylab = "LSe / USe",
-     firstpanel = grid()) #, axes = FALSE)
-contour(x1_Sp_HPGD_2, y1_Se_HPGD_2, t(ll_Sp_LSe_estHPGD_2),
-        levels = c(4.60517, 5.99, 9.21034), col = "forestgreen",
+     firstpanel = grid())
+contour(ll_Sp_LSe_est_HPGD_2$x_Sp, ll_Sp_LSe_est_HPGD_2$y_Se,
+        ll_Sp_LSe_est_HPGD_2$ll_Sp_LSe,
+        levels = qchisq(c(0.9, 0.95, 0.99), df = 2), col = "forestgreen",
         labels = c("0.90", "0.95", "0.99"), add = TRUE)
-points(x = 1 - Sp_emp_HPGD_2, y = LSe_emp_HPGD_2, pch = 16,
+points(x = 1 - ll_Sp_LSe_est_HPGD_2$Sp, y = ll_Sp_LSe_est_HPGD_2$LSe, pch = 16,
        col = "forestgreen")
 
-lines(x = p1, y = UTROC_emp_HPGD_2, col = "blue")
-contour(x2_Sp_HPGD_2, y2_Se_HPGD_2, t(ll_Sp_USe_estHPGD_2),
-        levels = c(4.60517, 5.99, 9.21034), col = "blue",
+lines(x = UTROC_emp_HPGD_2[, 1], y = UTROC_emp_HPGD_2[, 2], col = "blue")
+contour(ll_Sp_USe_est_HPGD_2$x_Sp, ll_Sp_USe_est_HPGD_2$y_Se,
+        ll_Sp_USe_est_HPGD_2$ll_Sp_USe,
+        levels = qchisq(c(0.9, 0.95, 0.99), df = 2), col = "blue",
         labels = c("0.90", "0.95", "0.99"), add = TRUE)
-points(x = 1 - Sp_emp_HPGD_2_2, y = USe_emp_HPGD_2, pch = 16,
+points(x = 1 - ll_Sp_USe_est_HPGD_2$Sp, y = ll_Sp_USe_est_HPGD_2$USe, pch = 16,
        col = "blue")
 
 ### ---- LTROC and UTROC curves: SORBS1 ----
-p1 <- seq(0, 1, by = 0.001)
-LTROC_emp_SORBS1 <- LTROC_emp(p1, Xlist = SORBS1_ls)
-UTROC_emp_SORBS1 <- UTROC_emp(p1, Xlist = SORBS1_ls)
-
-LTROC_emp_SORBS1[p1 == 0] <- 0
-LTROC_emp_SORBS1[p1 == 1] <- 1
-UTROC_emp_SORBS1[p1 == 0] <- 0
-UTROC_emp_SORBS1[p1 == 1] <- 1
+LTROC_emp_SORBS1 <- LTROC_emp(Xlist = SORBS1_ls)
+UTROC_emp_SORBS1 <- UTROC_emp(Xlist = SORBS1_ls)
 
 t1_SORBS1 <- -1
-
-Sp_emp_SORBS1 <- mean(SORBS1_ls[[1]] <= t1_SORBS1)
-all_Se_emp_SORBS1 <- sapply(SORBS1_ls[-1], function(y){
-  mean(y > t1_SORBS1)
-})
-LSe_emp_SORBS1 <- min(all_Se_emp_SORBS1)
-id_min_Se_SORBS1 <- which.min(all_Se_emp_SORBS1)
-
-x1_Sp_SORBS1 <- seq(0.01, 0.3, length.out = 300)
-y1_Se_SORBS1 <- seq(0.4, 1, length.out = 300)
-
-ll_Sp_LSe_estSORBS1 <- sapply(x1_Sp_SORBS1, function(x){
-  sapply(y1_Se_SORBS1, function(y){
-    ll_emp_2s(n = n, p0 = c(x, y),
-              p_est = c(1 - Sp_emp_SORBS1, LSe_emp_SORBS1),
-              id_min_max = id_min_Se_SORBS1)
-  })
-})
+ll_Sp_LSe_est_SORBS1 <- EL_cr_LTROC(cpt = t1_SORBS1, Xlist = SORBS1_ls,
+                                    xlim = c(0.01, 0.3), ylim = c(0.4, 1))
 
 t2_SORBS1 <- 0.5
+ll_Sp_USe_est_SORBS1 <- EL_cr_UTROC(cpt = t2_SORBS1, Xlist = SORBS1_ls,
+                                    xlim = c(0, 0.3), ylim = c(0.6, 1))
 
-Sp_emp_SORBS1_2 <- mean(SORBS1_ls[[1]] <= t2_SORBS1)
-all_Se_emp_SORBS1_2 <- sapply(SORBS1_ls[-1], function(y){
-  mean(y > t2_SORBS1)
-})
-USe_emp_SORBS1 <- max(all_Se_emp_SORBS1_2)
-id_min_Se_SORBS1_2 <- which.max(all_Se_emp_SORBS1_2)
-
-x2_Sp_SORBS1 <- seq(0, 0.3, length.out = 300)
-y2_Se_SORBS1 <- seq(0.6, 1, length.out = 300)
-
-ll_Sp_USe_estSORBS1 <- sapply(x2_Sp_SORBS1, function(x){
-  sapply(y2_Se_SORBS1, function(y){
-    ll_emp_2s(n = n, p0 = c(x, y),
-              p_est = c(1 - Sp_emp_SORBS1_2, USe_emp_SORBS1),
-              id_min_max = id_min_Se_SORBS1_2)
-  })
-})
-
-plot(x = p1, y = LTROC_emp_SORBS1, type = "l", col = "forestgreen",
-     xlim = c(0, 1), ylim = c(0, 1), # xaxs = "i", yaxs = "i",
+plot(x = LTROC_emp_SORBS1[, 1], y = LTROC_emp_SORBS1[, 2],
+     type = "l", col = "forestgreen", xlim = c(0, 1), ylim = c(0, 1),
      xlab = "1 - Specificity", ylab = "LSe / USe",
-     firstpanel = grid()) #, axes = FALSE)
-contour(x1_Sp_SORBS1, y1_Se_SORBS1, t(ll_Sp_LSe_estSORBS1),
-        levels = c(4.60517, 5.99, 9.21034), col = "forestgreen",
+     firstpanel = grid())
+contour(ll_Sp_LSe_est_SORBS1$x_Sp, ll_Sp_LSe_est_SORBS1$y_Se,
+        ll_Sp_LSe_est_SORBS1$ll_Sp_LSe,
+        levels = qchisq(c(0.9, 0.95, 0.99), df = 2), col = "forestgreen",
         labels = c("0.90", "0.95", "0.99"), add = TRUE)
-points(x = 1 - Sp_emp_SORBS1, y = LSe_emp_SORBS1, pch = 16,
+points(x = 1 - ll_Sp_LSe_est_SORBS1$Sp, y = ll_Sp_LSe_est_SORBS1$LSe, pch = 16,
        col = "forestgreen")
 
-lines(x = p1, y = UTROC_emp_SORBS1, col = "blue")
-contour(x2_Sp_SORBS1, y2_Se_SORBS1, t(ll_Sp_USe_estSORBS1),
-        levels = c(4.60517, 5.99, 9.21034), col = "blue",
+lines(x = UTROC_emp_SORBS1[, 1], y = UTROC_emp_SORBS1[, 2], col = "blue")
+contour(ll_Sp_USe_est_SORBS1$x_Sp, ll_Sp_USe_est_SORBS1$y_Se,
+        ll_Sp_USe_est_SORBS1$ll_Sp_USe,
+        levels = qchisq(c(0.9, 0.95, 0.99), df = 2), col = "blue",
         labels = c("0.90", "0.95", "0.99"), add = TRUE)
-points(x = 1 - Sp_emp_SORBS1_2, y = USe_emp_SORBS1, pch = 16,
+points(x = 1 - ll_Sp_USe_est_SORBS1$Sp, y = ll_Sp_USe_est_SORBS1$USe, pch = 16,
        col = "blue")
 
-### ---- LTROC and UTROC curves ----
-p1 <- seq(0, 1, by = 0.001)
-LTROC_emp_PODXL <- LTROC_emp(p1, Xlist = PODXL_ls)
-UTROC_emp_PODXL <- UTROC_emp(p1, Xlist = PODXL_ls)
-
-LTROC_emp_PODXL[p1 == 0] <- 0
-LTROC_emp_PODXL[p1 == 1] <- 1
-UTROC_emp_PODXL[p1 == 0] <- 0
-UTROC_emp_PODXL[p1 == 1] <- 1
+### ---- LTROC and UTROC curves: PODXL ----
+LTROC_emp_PODXL <- LTROC_emp(Xlist = PODXL_ls)
+UTROC_emp_PODXL <- UTROC_emp(Xlist = PODXL_ls)
 
 t1_PODXL <- -0.4
-
-Sp_emp_PODXL <- mean(PODXL_ls[[1]] <= t1_PODXL)
-all_Se_emp_PODXL <- sapply(PODXL_ls[-1], function(y){
-  mean(y > t1_PODXL)
-})
-LSe_emp_PODXL <- min(all_Se_emp_PODXL)
-id_min_Se_PODXL <- which.min(all_Se_emp_PODXL)
-
-x1_Sp_PODXL <- seq(0.01, 0.4, length.out = 300)
-y1_Se_PODXL <- seq(0.4, 1, length.out = 300)
-
-ll_Sp_LSe_estPODXL <- sapply(x1_Sp_PODXL, function(x){
-  sapply(y1_Se_PODXL, function(y){
-    ll_emp_2s(n = n, p0 = c(x, y),
-              p_est = c(1 - Sp_emp_PODXL, LSe_emp_PODXL),
-              id_min_max = id_min_Se_PODXL)
-  })
-})
+ll_Sp_LSe_est_SORBS1 <- EL_cr_LTROC(cpt = t1_PODXL, Xlist = PODXL_ls,
+                                    xlim = c(0.01, 0.4), ylim = c(0.4, 1))
 
 t2_PODXL <- 0.2
+ll_Sp_USe_est_SORBS1 <- EL_cr_UTROC(cpt = t2_PODXL, Xlist = PODXL_ls,
+                                    xlim = c(0, 0.4), ylim = c(0.6, 1))
 
-Sp_emp_PODXL_2 <- mean(PODXL_ls[[1]] <= t2_PODXL)
-all_Se_emp_PODXL_2 <- sapply(PODXL_ls[-1], function(y){
-  mean(y > t2_PODXL)
-})
-USe_emp_PODXL <- max(all_Se_emp_PODXL_2)
-id_min_Se_PODXL_2 <- which.max(all_Se_emp_PODXL_2)
-
-x2_Sp_PODXL <- seq(0, 0.4, length.out = 300)
-y2_Se_PODXL <- seq(0.6, 1, length.out = 300)
-
-ll_Sp_USe_estPODXL <- sapply(x2_Sp_PODXL, function(x){
-  sapply(y2_Se_PODXL, function(y){
-    ll_emp_2s(n = n, p0 = c(x, y),
-              p_est = c(1 - Sp_emp_PODXL_2, USe_emp_PODXL),
-              id_min_max = id_min_Se_PODXL_2)
-  })
-})
-
-plot(x = p1, y = LTROC_emp_PODXL, type = "l", col = "forestgreen",
-     xlim = c(0, 1), ylim = c(0, 1), # xaxs = "i", yaxs = "i",
+plot(x = LTROC_emp_PODXL[, 1], y = LTROC_emp_PODXL[, 2], type = "l",
+     col = "forestgreen", xlim = c(0, 1), ylim = c(0, 1),
      xlab = "1 - Specificity", ylab = "LSe / USe",
-     firstpanel = grid()) #, axes = FALSE)
-contour(x1_Sp_PODXL, y1_Se_PODXL, t(ll_Sp_LSe_estPODXL),
-        levels = c(4.60517, 5.99, 9.21034), col = "forestgreen",
+     firstpanel = grid())
+contour(ll_Sp_LSe_est_SORBS1$x_Sp, ll_Sp_LSe_est_SORBS1$y_Se,
+        ll_Sp_LSe_est_SORBS1$ll_Sp_LSe,
+        levels = qchisq(c(0.9, 0.95, 0.99), df = 2), col = "forestgreen",
         labels = c("0.90", "0.95", "0.99"), add = TRUE)
-points(x = 1 - Sp_emp_PODXL, y = LSe_emp_PODXL, pch = 16,
+points(x = 1 - ll_Sp_LSe_est_SORBS1$Sp, y = ll_Sp_LSe_est_SORBS1$LSe, pch = 16,
        col = "forestgreen")
 
-lines(x = p1, y = UTROC_emp_PODXL, col = "blue")
-contour(x2_Sp_PODXL, y2_Se_PODXL, t(ll_Sp_USe_estPODXL),
-        levels = c(4.60517, 5.99, 9.21034), col = "blue",
+lines(x = UTROC_emp_PODXL[, 1], y = UTROC_emp_PODXL[, 2], col = "blue")
+contour(ll_Sp_USe_est_SORBS1$x_Sp, ll_Sp_USe_est_SORBS1$y_Se,
+        ll_Sp_USe_est_SORBS1$ll_Sp_USe,
+        levels = qchisq(c(0.9, 0.95, 0.99), df = 2), col = "blue",
         labels = c("0.90", "0.95", "0.99"), add = TRUE)
-points(x = 1 - Sp_emp_PODXL_2, y = USe_emp_PODXL, pch = 16,
+points(x = 1 - ll_Sp_USe_est_SORBS1$Sp, y = ll_Sp_USe_est_SORBS1$USe, pch = 16,
        col = "blue")
