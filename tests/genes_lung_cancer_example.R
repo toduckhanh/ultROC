@@ -1,3 +1,9 @@
+### ---- NOTE: This R script contains the commands necessary to analyze
+### the dataset "GSE19188" for lung cancer study, as discussed in the paper.
+###
+
+### ---- load library ----
+require(ultROC)
 require(ggplot2)
 require(gridExtra)
 
@@ -68,7 +74,7 @@ grid.arrange(arrangeGrob(plot_dens_1 + theme(legend.position = "none"),
                          plot_dens_4 + theme(legend.position = "none"),
                          nrow = 2), mylegend, nrow = 2, heights = c(10, 1))
 
-### ---- define the data for biomarkers ----
+### ---- define the data for biomarkers (change the sign) ----
 HPGD_1_1 <- (-1) * data_genes$HPGD_1[data_genes$Group == "healthy"]
 HPGD_1_2 <- (-1) * data_genes$HPGD_1[data_genes$Group == "SCC"]
 HPGD_1_3 <- (-1) * data_genes$HPGD_1[data_genes$Group == "ADC"]
@@ -93,11 +99,12 @@ PODXL_3 <- (-1) * data_genes$PODXL[data_genes$Group == "ADC"]
 PODXL_4 <- (-1) * data_genes$PODXL[data_genes$Group == "LCC"]
 PODXL_ls <- list(PODXL_1, PODXL_2, PODXL_3, PODXL_4)
 
-### ---- Empirical estimation for LTAUC/UTAUC ----
+### ---- Nonparametric estimation for LTAUC/UTAUC ----
 ## ---- HPGD_1 ----
 LTAUC_HPGD_1 <- LTAUC_emp(HPGD_1_ls)
 UTAUC_HPGD_1 <- UTAUC_emp(HPGD_1_ls)
 
+## Empirical likelihood confidence intervals
 res_bts_HPGD_1 <- bts_func(HPGD_1_ls, n, LTAUC_HPGD_1, UTAUC_HPGD_1, B = 200)
 
 w1_HPGD_1 <- 1 / mean(res_bts_HPGD_1[1,])
@@ -127,6 +134,7 @@ c(LTAUC_HPGD_1, ci_LTAUC_HPGD_1[[2]], UTAUC_HPGD_1, ci_UTAUC_HPGD_1[[2]])
 LTAUC_HPGD_2 <- LTAUC_emp(HPGD_2_ls)
 UTAUC_HPGD_2 <- UTAUC_emp(HPGD_2_ls)
 
+## Empirical likelihood confidence intervals
 res_bts_HPGD_2 <- bts_func(HPGD_2_ls, n, LTAUC_HPGD_2, UTAUC_HPGD_2, B = 200)
 
 w1_HPGD_2 <- 1 / mean(res_bts_HPGD_2[1,])
@@ -155,6 +163,7 @@ c(LTAUC_HPGD_2, ci_LTAUC_HPGD_2[[2]], UTAUC_HPGD_2, ci_UTAUC_HPGD_2[[2]])
 LTAUC_SORBS1 <- LTAUC_emp(SORBS1_ls)
 UTAUC_SORBS1 <- UTAUC_emp(SORBS1_ls)
 
+## Empirical likelihood confidence intervals
 res_bts_SORBS1 <- bts_func(SORBS1_ls, n, LTAUC_SORBS1, UTAUC_SORBS1, B = 200)
 
 w1_SORBS1 <- 1 / mean(res_bts_SORBS1[1,])
@@ -183,6 +192,7 @@ c(LTAUC_SORBS1, ci_LTAUC_SORBS1[[2]], UTAUC_SORBS1, ci_UTAUC_SORBS1[[2]])
 LTAUC_PODXL <- LTAUC_emp(PODXL_ls)
 UTAUC_PODXL <- UTAUC_emp(PODXL_ls)
 
+## Empirical likelihood confidence intervals
 res_bts_PODXL <- bts_func(PODXL_ls, n, LTAUC_PODXL, UTAUC_PODXL, B = 200)
 
 w1_PODXL <- 1 / mean(res_bts_PODXL[1,])
@@ -207,6 +217,7 @@ EL_ci_LUTAUC(UTAUC_PODXL, n = n[1], w_est = w4_PODXL,
 
 c(LTAUC_PODXL, ci_LTAUC_PODXL[[2]], UTAUC_PODXL, ci_UTAUC_PODXL[[2]])
 
+## to show a table for results
 round(
   rbind("HPGD-1" = c(LTAUC_HPGD_1, ci_LTAUC_HPGD_1[[2]], UTAUC_HPGD_1,
                      ci_UTAUC_HPGD_1[[2]]),
@@ -219,8 +230,12 @@ round(
 )
 
 ### ---- LTROC and UTROC curves: HPGD_1 ----
+## nonparametric estimation for LTROC and UTROC
 LTROC_emp_HPGD_1 <- LTROC_emp(Xlist = HPGD_1_ls)
 UTROC_emp_HPGD_1 <- UTROC_emp(Xlist = HPGD_1_ls)
+
+## empirical likelihood confidence regions for (Sp, LSe) and (Sp, USe)
+## at fixed thresholds
 
 t1_HPGD_1 <- -1.1
 
@@ -232,6 +247,7 @@ t2_HPGD_1 <- 0.8
 ll_Sp_USe_est_HPGD_1 <- EL_cr_UTROC(cpt = t2_HPGD_1, Xlist = HPGD_1_ls,
                                     xlim = c(0, 0.3), ylim = c(0.6, 1))
 
+## plot nonparametric estimation for LTROC and UTROC and confidence regions
 plot(x = LTROC_emp_HPGD_1[, 1], y = LTROC_emp_HPGD_1[, 2], type = "l",
      col = "forestgreen", xlim = c(0, 1), ylim = c(0, 1),
      xlab = "1 - Specificity", ylab = "LSe / USe",
@@ -252,9 +268,12 @@ points(x = 1 - ll_Sp_USe_est_HPGD_1$Sp, y = ll_Sp_USe_est_HPGD_1$USe, pch = 16,
        col = "blue")
 
 ### ---- LTROC and UTROC curves: HPGD_2 ----
+## nonparametric estimation for LTROC and UTROC
 LTROC_emp_HPGD_2 <- LTROC_emp(Xlist = HPGD_2_ls)
 UTROC_emp_HPGD_2 <- UTROC_emp(Xlist = HPGD_2_ls)
 
+## empirical likelihood confidence regions for (Sp, LSe) and (Sp, USe)
+## at fixed thresholds
 t1_HPGD_2 <- -1.1
 ll_Sp_LSe_est_HPGD_2 <- EL_cr_LTROC(cpt = t1_HPGD_2, Xlist = HPGD_2_ls,
                                     xlim = c(0.01, 0.3), ylim = c(0.5, 0.95))
@@ -263,6 +282,7 @@ t2_HPGD_2 <- 0.8
 ll_Sp_USe_est_HPGD_2 <- EL_cr_UTROC(cpt = t2_HPGD_2, Xlist = HPGD_2_ls,
                                     xlim = c(0, 0.3), ylim = c(0.6, 1))
 
+## plot nonparametric estimation for LTROC and UTROC and confidence regions
 plot(x = LTROC_emp_HPGD_2[, 1], y = LTROC_emp_HPGD_2[, 2], type = "l",
      col = "forestgreen", xlim = c(0, 1), ylim = c(0, 1),
      xlab = "1 - Specificity", ylab = "LSe / USe",
@@ -283,9 +303,12 @@ points(x = 1 - ll_Sp_USe_est_HPGD_2$Sp, y = ll_Sp_USe_est_HPGD_2$USe, pch = 16,
        col = "blue")
 
 ### ---- LTROC and UTROC curves: SORBS1 ----
+## nonparametric estimation for LTROC and UTROC
 LTROC_emp_SORBS1 <- LTROC_emp(Xlist = SORBS1_ls)
 UTROC_emp_SORBS1 <- UTROC_emp(Xlist = SORBS1_ls)
 
+## empirical likelihood confidence regions for (Sp, LSe) and (Sp, USe)
+## at fixed thresholds
 t1_SORBS1 <- -1
 ll_Sp_LSe_est_SORBS1 <- EL_cr_LTROC(cpt = t1_SORBS1, Xlist = SORBS1_ls,
                                     xlim = c(0.01, 0.3), ylim = c(0.4, 1))
@@ -294,6 +317,7 @@ t2_SORBS1 <- 0.5
 ll_Sp_USe_est_SORBS1 <- EL_cr_UTROC(cpt = t2_SORBS1, Xlist = SORBS1_ls,
                                     xlim = c(0, 0.3), ylim = c(0.6, 1))
 
+## plot nonparametric estimation for LTROC and UTROC and confidence regions
 plot(x = LTROC_emp_SORBS1[, 1], y = LTROC_emp_SORBS1[, 2],
      type = "l", col = "forestgreen", xlim = c(0, 1), ylim = c(0, 1),
      xlab = "1 - Specificity", ylab = "LSe / USe",
@@ -314,9 +338,12 @@ points(x = 1 - ll_Sp_USe_est_SORBS1$Sp, y = ll_Sp_USe_est_SORBS1$USe, pch = 16,
        col = "blue")
 
 ### ---- LTROC and UTROC curves: PODXL ----
+## nonparametric estimation for LTROC and UTROC
 LTROC_emp_PODXL <- LTROC_emp(Xlist = PODXL_ls)
 UTROC_emp_PODXL <- UTROC_emp(Xlist = PODXL_ls)
 
+## empirical likelihood confidence regions for (Sp, LSe) and (Sp, USe)
+## at fixed thresholds
 t1_PODXL <- -0.4
 ll_Sp_LSe_est_SORBS1 <- EL_cr_LTROC(cpt = t1_PODXL, Xlist = PODXL_ls,
                                     xlim = c(0.01, 0.4), ylim = c(0.4, 1))
@@ -325,6 +352,7 @@ t2_PODXL <- 0.2
 ll_Sp_USe_est_SORBS1 <- EL_cr_UTROC(cpt = t2_PODXL, Xlist = PODXL_ls,
                                     xlim = c(0, 0.4), ylim = c(0.6, 1))
 
+## plot nonparametric estimation for LTROC and UTROC and confidence regions
 plot(x = LTROC_emp_PODXL[, 1], y = LTROC_emp_PODXL[, 2], type = "l",
      col = "forestgreen", xlim = c(0, 1), ylim = c(0, 1),
      xlab = "1 - Specificity", ylab = "LSe / USe",
