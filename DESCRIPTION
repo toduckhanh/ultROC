@@ -1,7 +1,7 @@
 Package: ultROC
 Type: Package
 Title: Diagnostic accuracy of biomarker under umbrella or tree ordering 
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person(given = "Duc-Khanh",
            family = "To",
@@ -17,5 +17,5 @@ Depends: R(>= 3.3.0), stats, utils, graphics
 Suggests: ggplot2, gridExtra, GEOquery
 LazyLoad: yes
 ByteCompile: yes
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 NeedsCompilation: yes

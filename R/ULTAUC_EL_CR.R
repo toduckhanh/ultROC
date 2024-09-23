@@ -14,14 +14,14 @@ bts_func <- function(Y, n, LTAUC_est, UTAUC_est, seed, B = 200){
   if (missing(seed)) seed <- 34
   set.seed(seed)
   res_bts <- sapply(1:B, function(i){
-    flag <- 0
-    while(flag == 0){
+    # flag <- 0
+    # while(flag == 0){
       Y_b <- lapply(Y, function(x){
         sample(x, size = length(x), replace = TRUE)
       })
-      mu_Y <- sapply(Y_b, mean)
-      flag <- all(mu_Y[1] < mu_Y[-1])
-    }
+      # mu_Y <- sapply(Y_b, mean)
+      # flag <- all(mu_Y[1] < mu_Y[-1])
+    # }
     LTAUC_bts <- LTAUC_emp(Y_b)
     UTAUC_bts <- UTAUC_emp(Y_b)
     if (LTAUC_bts == 1) LTAUC_bts <- n[1] / (n[1] + 0.5)
